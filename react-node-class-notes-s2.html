@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>React + Node.js — Session 2 Class Notes</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;1,400&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0b0c11;
+    --surface: #12141c;
+    --surface2: #181b26;
+    --surface3: #1e2130;
+    --border: #232640;
+    --accent: #7c6af7;
+    --accent2: #3ecf8e;
+    --accent3: #f59e0b;
+    --accent4: #e8547a;
+    --node: #68a063;
+    --text: #e4e6f0;
+    --muted: #6b6f8a;
+    --code-bg: #0d0e16;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    padding-bottom: 100px;
+  }
+
+  /* ── BANNER ── */
+  .banner {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 52px 64px 44px;
+    position: relative;
+    overflow: hidden;
+  }
+  .banner::after {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 480px; height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,106,247,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .session-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(124,106,247,0.12);
+    border: 1px solid rgba(124,106,247,0.25);
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    padding: 5px 14px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  .session-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .banner h1 { font-size: 38px; font-weight: 800; letter-spacing: -0.025em; color: #fff; margin-bottom: 10px; }
+  .banner h1 span { color: var(--accent2); }
+  .banner p { color: var(--muted); font-size: 14px; max-width: 580px; line-height: 1.8; }
+  .banner-chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .chip {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; font-family: 'JetBrains Mono', monospace;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 6px;
+  }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── PART DIVIDERS ── */
+  .part-header {
+    max-width: 900px; margin: 56px auto 0; padding: 0 44px;
+  }
+  .part-band {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 24px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .part-band.react { background: rgba(97,218,251,0.05); border-color: rgba(97,218,251,0.2); }
+  .part-band.node  { background: rgba(104,160,99,0.06); border-color: rgba(104,160,99,0.25); }
+  .part-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+  }
+  .part-icon.react { background: rgba(97,218,251,0.12); color: #61dafb; }
+  .part-icon.node  { background: rgba(104,160,99,0.15); color: var(--node); }
+  .part-band h2 { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .part-band p  { font-size: 13px; color: var(--muted); }
+
+  /* ── TOC ── */
+  .toc-wrap { max-width: 900px; margin: 36px auto 0; padding: 0 44px; }
+  .toc { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 26px 30px; }
+  .toc-label { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 18px; }
+  .toc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 40px; }
+  .toc-row { display: flex; align-items: center; gap: 12px; padding: 5px 0; text-decoration: none; font-size: 13px; color: var(--muted); transition: color .15s; }
+  .toc-row:hover { color: var(--text); }
+  .toc-n { font-family: 'JetBrains Mono', monospace; font-size: 11px; min-width: 22px; }
+  .toc-n.r { color: #61dafb; }
+  .toc-n.n { color: var(--node); }
+
+  /* ── MAIN ── */
+  .main { max-width: 900px; margin: 0 auto; padding: 0 44px; }
+
+  /* ── STEP ── */
+  .step { margin-top: 56px; }
+  .step-hd { display: flex; align-items: flex-start; gap: 18px; margin-bottom: 22px; }
+  .step-badge { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+  .step-num {
+    width: 38px; height: 38px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700;
+    border: 1px solid var(--border); background: var(--surface2);
+  }
+  .step-num.r { color: #61dafb; border-color: rgba(97,218,251,0.3); background: rgba(97,218,251,0.06); }
+  .step-num.n { color: var(--node); border-color: rgba(104,160,99,0.3); background: rgba(104,160,99,0.06); }
+  .step-vline { width: 1px; background: var(--border); flex: 1; min-height: 24px; margin-top: 6px; }
+  .step-title { font-size: 21px; font-weight: 700; color: #fff; letter-spacing: -0.015em; margin-bottom: 5px; }
+  .step-file { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); }
+  .step-body { padding-left: 56px; }
+  .step-desc { font-size: 14px; color: var(--muted); line-height: 1.85; margin-bottom: 20px; }
+  .step-desc strong { color: var(--text); font-weight: 600; }
+  .step-desc code { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--accent2); background: rgba(62,207,142,0.08); padding: 1px 6px; border-radius: 4px; }
+
+  /* ── CODE ── */
+  .file-bar {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-bottom: none; border-radius: 8px 8px 0 0;
+    padding: 9px 16px; margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted);
+  }
+  .fb-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .fb-dot.jsx  { background: #61dafb; }
+  .fb-dot.js   { background: var(--node); }
+  .fb-dot.css  { background: var(--accent3); }
+  .fb-dot.idea { background: var(--accent4); }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 0 0 8px 8px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px; line-height: 1.7; color: #b4b8d4;
+  }
+  pre.solo { border-radius: 8px; margin-top: 16px; }
+
+  /* syntax colors */
+  .k  { color: #c792ea; }   /* keyword */
+  .fn { color: #82aaff; }   /* function */
+  .s  { color: #c3e88d; }   /* string */
+  .t  { color: #f07178; }   /* jsx tag */
+  .a  { color: #ffcb6b; }   /* attr */
+  .v  { color: #89ddff; }   /* value / operator */
+  .cm { color: #4a5068; font-style: italic; } /* comment */
+  .n  { color: #f78c6c; }   /* number */
+  .h  { color: var(--accent2); }   /* hook / import */
+  .m  { color: var(--accent3); }   /* method */
+
+  /* ── CALLOUT ── */
+  .note {
+    border-left: 3px solid var(--accent);
+    background: rgba(124,106,247,0.07);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px; margin-top: 18px;
+    font-size: 13px; color: var(--muted); line-height: 1.8;
+  }
+  .note strong { color: var(--accent); font-weight: 600; }
+  .note.green  { border-color: var(--accent2); background: rgba(62,207,142,0.07); }
+  .note.green strong { color: var(--accent2); }
+  .note.amber  { border-color: var(--accent3); background: rgba(245,158,11,0.07); }
+  .note.amber strong { color: var(--accent3); }
+  .note.red    { border-color: var(--accent4); background: rgba(232,84,122,0.07); }
+  .note.red strong  { color: var(--accent4); }
+  .note.node-green { border-color: var(--node); background: rgba(104,160,99,0.07); }
+  .note.node-green strong { color: var(--node); }
+  .note code {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--accent2); background: rgba(62,207,142,0.1);
+    padding: 1px 6px; border-radius: 3px;
+  }
+
+  /* ── SIDE-BY-SIDE ── */
+  .cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  .col-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+  .col-label { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+  .col-card pre { border-radius: 6px; padding: 14px; font-size: 12px; border: none; margin-top: 0; }
+
+  /* ── CONCEPT GRID ── */
+  .concept-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .cg-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+  .cg-label { font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .cg-box p { font-size: 13px; color: var(--muted); line-height: 1.75; }
+  .cg-box p strong { color: var(--text); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow { display: flex; align-items: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .flow-box {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 14px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text);
+  }
+  .flow-box.hi { border-color: rgba(124,106,247,0.4); color: var(--accent); background: rgba(124,106,247,0.08); }
+  .flow-box.gr { border-color: rgba(62,207,142,0.4); color: var(--accent2); background: rgba(62,207,142,0.07); }
+  .flow-box.og { border-color: rgba(245,158,11,0.4); color: var(--accent3); background: rgba(245,158,11,0.07); }
+  .flow-box.nd { border-color: rgba(104,160,99,0.4); color: var(--node); background: rgba(104,160,99,0.07); }
+  .flow-arr { color: var(--muted); font-size: 16px; }
+
+  /* ── DIVIDER ── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 60px 0 0; }
+
+  /* ── FOOTER ── */
+  .footer {
+    max-width: 900px; margin: 48px auto 0; padding: 0 44px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace;
+    flex-wrap: wrap; gap: 10px;
+  }
+
+  @media (max-width: 640px) {
+    .banner { padding: 32px 24px; }
+    .banner h1 { font-size: 26px; }
+    .toc-cols { grid-template-columns: 1fr; }
+    .toc-wrap, .main, .part-header { padding: 0 20px; }
+    .cols2, .concept-grid { grid-template-columns: 1fr; }
+    .step-body { padding-left: 0; margin-top: 14px; }
+    .footer { flex-direction: column; padding: 0 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ BANNER ═══════════════ -->
+<div class="banner">
+  <div class="session-tag"><span class="session-dot"></span>SESSION 2 — CLASS NOTES</div>
+  <h1>React Advanced + <span>Node.js</span> Backend</h1>
+  <p>Dark mode toggle, search filtering, React Router, component architecture — then a full shift to Node.js: V8, the http module, npm, Express, and building a REST API with GET and POST endpoints.</p>
+  <div class="banner-chips">
+    <div class="chip"><span class="chip-dot" style="background:#61dafb"></span>classList.toggle</div>
+    <div class="chip"><span class="chip-dot" style="background:var(--accent)"></span>Array.filter()</div>
+    <div class="chip"><span class="chip-dot" style="background:var(--accent4)"></span>React Router DOM</div>
+    <div class="chip"><span class="chip-dot" style="background:var(--node)"></span>Node.js + V8</div>
+    <div class="chip"><span class="chip-dot" style="background:var(--accent2)"></span>Express.js</div>
+    <div class="chip"><span class="chip-dot" style="background:var(--accent3)"></span>GET + POST API</div>
+  </div>
+</div>
+
+<!-- ═══════════════ TOC ═══════════════ -->
+<div class="toc-wrap">
+  <div class="toc">
+    <div class="toc-label">Contents</div>
+    <div class="toc-cols">
+      <a class="toc-row" href="#s1"><span class="toc-n r">R1</span>classList — Dark / Light Mode</a>
+      <a class="toc-row" href="#s6"><span class="toc-n n">N1</span>Node.js + V8 Engine</a>
+      <a class="toc-row" href="#s2"><span class="toc-n r">R2</span>Array.filter() + Live Search</a>
+      <a class="toc-row" href="#s7"><span class="toc-n n">N2</span>fs Module + http Module</a>
+      <a class="toc-row" href="#s3"><span class="toc-n r">R3</span>Card Style Upgrade + flexWrap</a>
+      <a class="toc-row" href="#s8"><span class="toc-n n">N3</span>npm, package.json, package-lock.json</a>
+      <a class="toc-row" href="#s4"><span class="toc-n r">R4</span>New Components (About, Signup, Signin)</a>
+      <a class="toc-row" href="#s9"><span class="toc-n n">N4</span>Express Basics — Creating a Server</a>
+      <a class="toc-row" href="#s5"><span class="toc-n r">R5</span>React Router DOM — Full Routing</a>
+      <a class="toc-row" href="#s10"><span class="toc-n n">N5</span>app.get + app.post — REST API</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════ REACT PART HEADER ═══════════════ -->
+<div class="part-header">
+  <div class="part-band react">
+    <div class="part-icon react">JSX</div>
+    <div>
+      <h2>Part 1 — React: DOM, Filtering, Routing</h2>
+      <p>classList API · Array.filter() · component styling · React Router DOM</p>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ──────── R1: classList / Dark Mode ──────── -->
+<div class="step" id="s1">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num r">R1</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">classList — Dark / Light Mode Toggle</div>
+      <div class="step-file">header.jsx · index.css · document.body</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      Before adding React state or any library, you used a raw browser API: <strong><code>document.body.classList</code></strong>.
+      Every HTML element has a <code>classList</code> property that lets you add, remove, or toggle CSS class names from JavaScript.
+      You applied this directly inside a React event handler — proving that React doesn't replace the DOM, it sits on top of it.
+    </p>
+
+    <p class="step-desc" style="margin-bottom:10px">The three methods you covered:</p>
+
+    <div class="file-bar"><span class="fb-dot idea"></span>concept — the three classList methods</div>
+    <pre><span class="cm">// .add() — adds a class (even if already present, no duplicate)</span>
+document.body.classList.<span class="m">add</span>(<span class="s">'dark'</span>)      <span class="cm">// body now has class="dark"</span>
+
+<span class="cm">// .remove() — removes a class (safe even if class isn't there)</span>
+document.body.classList.<span class="m">remove</span>(<span class="s">'dark'</span>)   <span class="cm">// body now has class=""</span>
+
+<span class="cm">// .toggle() — adds if not present, removes if present</span>
+<span class="cm">// This is what you used in the project — one function does both</span>
+document.body.classList.<span class="m">toggle</span>(<span class="s">'dark'</span>)   <span class="cm">// flips between dark / not dark</span></pre>
+
+    <div class="file-bar"><span class="fb-dot css"></span>index.css — the dark class that gets toggled</div>
+    <pre><span class="k">.dark</span> {
+  background-color: <span class="n">#222</span>;
+  color: <span class="s">white</span>;
+}
+a {
+  color: <span class="n">#8ab4f8</span>;
+}</pre>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>header.jsx — togglemode function + button</div>
+    <pre><span class="k">function</span> <span class="fn">Header</span>({setsearchquery}) {
+
+  <span class="cm">// Pure DOM function — no React state needed here</span>
+  <span class="k">function</span> <span class="fn">togglemode</span>() {
+    document.body.classList.<span class="m">toggle</span>(<span class="s">'dark'</span>)
+    <span class="cm">// First click: adds 'dark' → body turns dark background, white text</span>
+    <span class="cm">// Second click: removes 'dark' → body goes back to default</span>
+    <span class="cm">// Every click after: keeps flipping</span>
+  }
+
+  <span class="k">return</span> (
+    <span class="t">&lt;header&gt;</span>
+      <span class="cm">{/* ... logo, input, nav ... */}</span>
+      <span class="t">&lt;button</span> <span class="a">onClick</span><span class="v">={togglemode}</span><span class="t">&gt;</span>dark/light<span class="t">&lt;/button&gt;</span>
+    <span class="t">&lt;/header&gt;</span>
+  )
+}</pre>
+
+    <div class="note">
+      <strong>Why no useState here?</strong> You don't need to store "is dark mode on" in React state because the CSS class
+      on <code>document.body</code> IS the source of truth. The browser remembers it. React re-renders only when its
+      own state/props change — this button triggers a DOM change directly, which is perfectly valid for simple global UI toggles.
+    </div>
+
+    <div class="note green" style="margin-top:12px">
+      <strong>The flow:</strong>
+      <div class="flow" style="margin-top:10px">
+        <div class="flow-box">Button click</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box hi">onClick fires togglemode()</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box">classList.toggle('dark')</div>
+        <span class="flow-arr">→</span>
+        <div class="flow-box gr">CSS .dark rule applies to entire page</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── R2: Array.filter() + Search ──────── -->
+<div class="step" id="s2">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num r">R2</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">Array.filter() — Live Product Search</div>
+      <div class="step-file">Products.jsx · header.jsx · App.jsx</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      You implemented live search across the entire app — as the user types in the Header input,
+      the Products grid filters in real time. This required connecting three components using <strong>state lifting</strong>:
+      the search state lives in <code>App.jsx</code> (the common ancestor), gets sent down to <code>Header</code> as the setter,
+      and to <code>Products</code> as the query value.
+    </p>
+
+    <p class="step-desc">
+      The actual filtering uses <strong><code>Array.filter()</code></strong> — a built-in JavaScript method that returns
+      a new array containing only elements where your callback function returns <code>true</code>.
+      Combined with <code>.toLowerCase()</code> and <code>.includes()</code>, you get case-insensitive substring matching.
+    </p>
+
+    <div class="file-bar"><span class="fb-dot idea"></span>concept — how Array.filter() works</div>
+    <pre><span class="cm">// filter() loops through every item in the array</span>
+<span class="cm">// keeps only items where the callback returns true</span>
+<span class="cm">// returns a BRAND NEW array — original is not changed</span>
+
+<span class="k">const</span> nums <span class="v">=</span> [<span class="n">1</span>, <span class="n">2</span>, <span class="n">3</span>, <span class="n">4</span>, <span class="n">5</span>]
+<span class="k">const</span> evens <span class="v">=</span> nums.<span class="m">filter</span>((n) <span class="v">=&gt;</span> n <span class="v">%</span> <span class="n">2</span> <span class="v">===</span> <span class="n">0</span>)   <span class="cm">// [2, 4]</span>
+
+<span class="cm">// Same idea — filter products where title contains the search query</span>
+<span class="k">const</span> results <span class="v">=</span> products.<span class="m">filter</span>((p) <span class="v">=&gt;</span> {
+  <span class="k">return</span> p.title.<span class="m">toLowerCase</span>().<span class="m">includes</span>(query.<span class="m">toLowerCase</span>())
+  <span class="cm">// .toLowerCase() on BOTH sides → case-insensitive match</span>
+  <span class="cm">// .includes() → true if query appears anywhere in title</span>
+})</pre>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>App.jsx — searchquery state lifted here, passed down both ways</div>
+    <pre><span class="k">import</span> { <span class="h">useState</span> } <span class="k">from</span> <span class="s">'react'</span>
+<span class="k">import</span> <span class="h">Header</span>   <span class="k">from</span> <span class="s">'./header'</span>
+<span class="k">import</span> <span class="h">Products</span> <span class="k">from</span> <span class="s">'./Products'</span>
+
+<span class="k">function</span> <span class="fn">App</span>() {
+  <span class="k">const</span> [searchquery, setsearchquery] <span class="v">=</span> <span class="h">useState</span>(<span class="s">''</span>)
+  <span class="cm">// searchquery lives HERE (common ancestor of Header + Products)</span>
+
+  <span class="k">return</span> (
+    <span class="t">&lt;&gt;</span>
+      <span class="t">&lt;Header</span>  <span class="a">setsearchquery</span><span class="v">={setsearchquery}</span>  <span class="t">/&gt;</span>
+      <span class="cm">{/* Header gets the SETTER — it calls it when user types */}</span>
+
+      <span class="t">&lt;Products</span>  <span class="a">searchquery</span><span class="v">={searchquery}</span>  <span class="t">/&gt;</span>
+      <span class="cm">{/* Products gets the VALUE — it uses it to filter */}</span>
+    <span class="t">&lt;/&gt;</span>
+  )
+}</pre>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>header.jsx — receives setsearchquery as prop, calls it on change</div>
+    <pre><span class="k">function</span> <span class="fn">Header</span>({ setsearchquery }) {
+  <span class="k">return</span> (
+    <span class="t">&lt;input</span>
+      <span class="a">onChange</span><span class="v">={</span>(e) <span class="v">=&gt;</span> { <span class="fn">setsearchquery</span>(e.target.value) }<span class="v">}</span>
+      <span class="a">placeholder</span><span class="v">=</span><span class="s">"search the products..."</span>
+      <span class="a">type</span><span class="v">=</span><span class="s">"text"</span>
+    <span class="t">/&gt;</span>
+  )
+}</pre>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>Products.jsx — receives searchquery, runs filter, maps filteredproducts</div>
+    <pre><span class="k">function</span> <span class="fn">Products</span>({ searchquery }) {
+  <span class="k">const</span> [products, setproducts] <span class="v">=</span> <span class="h">useState</span>([])
+
+  <span class="h">useEffect</span>(() <span class="v">=&gt;</span> {
+    <span class="m">fetch</span>(<span class="s">'http://localhost:3000/products'</span>)
+      .<span class="m">then</span>(r <span class="v">=&gt;</span> r.<span class="m">json</span>())
+      .<span class="m">then</span>(data <span class="v">=&gt;</span> <span class="fn">setproducts</span>(data))
+  }, [])
+
+  <span class="cm">// filter runs on every render — whenever searchquery changes,</span>
+  <span class="cm">// App re-renders Products with the new value, filter runs again</span>
+  <span class="k">let</span> filteredproducts <span class="v">=</span> products.<span class="m">filter</span>((p) <span class="v">=&gt;</span> {
+    <span class="k">return</span> p.title.<span class="m">toLowerCase</span>().<span class="m">includes</span>(searchquery.<span class="m">toLowerCase</span>())
+  })
+
+  <span class="k">return</span> (
+    <span class="t">&lt;&gt;</span>
+      {filteredproducts.<span class="m">map</span>((e) <span class="v">=&gt;</span>
+        <span class="t">&lt;Card</span> <span class="a">image</span><span class="v">={e.image}</span> <span class="a">title</span><span class="v">={e.title}</span> <span class="a">price</span><span class="v">={e.price}</span> <span class="t">/&gt;</span>
+      )}
+    <span class="t">&lt;/&gt;</span>
+  )
+}</pre>
+
+    <div class="note amber">
+      <strong>State lifting explained:</strong> Header and Products don't talk to each other directly — they're siblings.
+      React data only flows downward (parent → child). So when two siblings need to share state,
+      you "lift" the state up to their closest common parent — here that's <code>App.jsx</code>.
+      App stores the query, gives the setter to Header, gives the value to Products. This is one of the most important React patterns.
+    </div>
+
+    <div class="note" style="margin-top:12px">
+      <strong>Why not just filter inside useEffect?</strong> Because useEffect only runs when dependencies change.
+      The filtering needs to happen on every keystroke — that's a render-time operation, not a side effect.
+      So you filter synchronously during render, not inside useEffect.
+    </div>
+  </div>
+</div>
+
+<!-- ──────── R3: Card Style + flexWrap ──────── -->
+<div class="step" id="s3">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num r">R3</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">Card Style Upgrade + flexWrap Grid</div>
+      <div class="step-file">Card.jsx · Products.jsx</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      You updated the Card component with proper styling — fixed width, padding, border-radius, margin —
+      so products look like real product cards instead of raw bordered boxes.
+      In Products.jsx you wrapped the cards in a flex container with <strong><code>flexWrap: "wrap"</code></strong>
+      so they automatically wrap to new rows instead of overflowing horizontally.
+    </p>
+
+    <div class="cols2">
+      <div class="col-card">
+        <div class="col-label">Card.jsx — before</div>
+        <pre><span class="t">&lt;div</span> <span class="a">style</span><span class="v">={{</span>
+  border: <span class="s">"1px red solid"</span>
+<span class="v">}}</span><span class="t">&gt;</span>
+  <span class="t">&lt;img</span> <span class="a">height</span><span class="v">={250}</span> <span class="a">width</span><span class="v">={250}</span> <span class="t">/&gt;</span>
+  <span class="t">&lt;h2&gt;</span>title:{props.title}<span class="t">&lt;/h2&gt;</span>
+  <span class="t">&lt;h3&gt;</span>price:{props.price}<span class="t">&lt;/h3&gt;</span>
+<span class="t">&lt;/div&gt;</span></pre>
+      </div>
+      <div class="col-card">
+        <div class="col-label">Card.jsx — after (final file)</div>
+        <pre><span class="t">&lt;div</span> <span class="a">style</span><span class="v">={{</span>
+  border:       <span class="s">"1px red solid"</span>,
+  width:        <span class="s">"300px"</span>,
+  padding:      <span class="s">"20px"</span>,
+  margin:       <span class="s">"10px"</span>,
+  borderRadius: <span class="s">"10px"</span>
+<span class="v">}}</span><span class="t">&gt;</span>
+  <span class="t">&lt;img</span> <span class="a">height</span><span class="v">={250}</span> <span class="a">width</span><span class="v">={250}</span> <span class="t">/&gt;</span>
+  <span class="t">&lt;h2&gt;</span>{props.title}<span class="t">&lt;/h2&gt;</span>
+  <span class="t">&lt;h3&gt;</span>price:{props.price}<span class="t">&lt;/h3&gt;</span>
+<span class="t">&lt;/div&gt;</span></pre>
+      </div>
+    </div>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>Products.jsx — flex container wrapping all cards</div>
+    <pre><span class="k">return</span> (
+  <span class="t">&lt;&gt;</span>
+    <span class="t">&lt;div</span> <span class="a">style</span><span class="v">={{</span> display: <span class="s">"flex"</span>, flexWrap: <span class="s">"wrap"</span> <span class="v">}}</span><span class="t">&gt;</span>
+      <span class="cm">// without flexWrap:"wrap" → all cards line up in one horizontal row</span>
+      <span class="cm">// that row overflows the screen width and causes a horizontal scrollbar</span>
+      <span class="cm">// with flexWrap:"wrap" → cards spill onto new rows automatically</span>
+      {filteredproducts.<span class="m">map</span>((e) <span class="v">=&gt;</span>
+        <span class="t">&lt;Card</span> <span class="a">image</span><span class="v">={e.image}</span> <span class="a">title</span><span class="v">={e.title}</span> <span class="a">price</span><span class="v">={e.price}</span> <span class="t">/&gt;</span>
+      )}
+    <span class="t">&lt;/div&gt;</span>
+  <span class="t">&lt;/&gt;</span>
+)</pre>
+
+    <div class="note green">
+      <strong>flexWrap: "wrap" is the key.</strong> Each Card is 300px wide + 10px margin each side = ~320px.
+      The browser fits as many as it can per row (depends on screen width) and wraps the rest to the next line.
+      This is how most product grids on real e-commerce sites work — pure flexbox, no CSS Grid needed.
+    </div>
+  </div>
+</div>
+
+<!-- ──────── R4: New Components ──────── -->
+<div class="step" id="s4">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num r">R4</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">New Components — About, Signup, Signin</div>
+      <div class="step-file">About.jsx · Signup.jsx · Signin.jsx</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      You created three new page-level components. This is how React apps scale — each page is its own component.
+      <strong>About.jsx</strong> has real content (the ShopSphere about section with headings and paragraphs).
+      <strong>Signup.jsx</strong> and <strong>Signin.jsx</strong> are placeholder stubs for now — just a div with text —
+      with real form logic to be added later. All three are wired up to routes in the next step.
+    </p>
+
+    <div class="cols2">
+      <div class="col-card">
+        <div class="col-label">Signup.jsx — stub (data comes later)</div>
+        <pre><span class="k">function</span> <span class="fn">Signup</span>() {
+  <span class="k">return</span> (
+    <span class="t">&lt;div&gt;</span>Signup<span class="t">&lt;/div&gt;</span>
+  )
+}
+<span class="k">export default</span> Signup</pre>
+      </div>
+      <div class="col-card">
+        <div class="col-label">Signin.jsx — stub (data comes later)</div>
+        <pre><span class="k">function</span> <span class="fn">Signin</span>() {
+  <span class="k">return</span> (
+    <span class="t">&lt;div&gt;</span>Signin<span class="t">&lt;/div&gt;</span>
+  )
+}
+<span class="k">export default</span> Signin</pre>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Why create stubs?</strong> You're building the routing structure first. Once the routes exist,
+      you can fill in each page component independently. This is how real teams work — skeleton first, content after.
+      Signup and Signin pages will later have controlled input forms, validation, and API calls to your backend.
+    </div>
+  </div>
+</div>
+
+<!-- ──────── R5: React Router ──────── -->
+<div class="step" id="s5">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num r">R5</div>
+    </div>
+    <div>
+      <div class="step-title">React Router DOM — Full Client-Side Routing</div>
+      <div class="step-file">main.jsx · App.jsx · header.jsx</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      By default, React is a Single Page Application — there is literally <strong>one HTML file</strong>
+      (<code>index.html</code>) and React swaps content in and out without the browser ever navigating to a new page.
+      <strong>React Router DOM</strong> is the library that makes URLs feel like they navigate to different pages,
+      while staying inside that single HTML file the whole time. No full page reload ever happens.
+    </p>
+
+    <p class="step-desc">
+      The setup requires three pieces working together: <code>BrowserRouter</code> wraps the whole app in <code>main.jsx</code>,
+      <code>Routes</code> and <code>Route</code> define which component shows at which URL path in <code>App.jsx</code>,
+      and <code>Link</code> replaces <code>&lt;a href&gt;</code> tags in <code>header.jsx</code> for navigation without page reloads.
+    </p>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>main.jsx — BrowserRouter wraps everything at the top level</div>
+    <pre><span class="k">import</span> { <span class="h">BrowserRouter</span> } <span class="k">from</span> <span class="s">'react-router-dom'</span>
+<span class="k">import</span> <span class="h">App</span> <span class="k">from</span> <span class="s">'./App.jsx'</span>
+
+createRoot(document.getElementById(<span class="s">'root'</span>)).<span class="m">render</span>(
+  <span class="t">&lt;BrowserRouter&gt;</span>         <span class="cm">← must wrap App, not the other way around</span>
+    <span class="t">&lt;StrictMode&gt;</span>
+      <span class="t">&lt;App /&gt;</span>
+    <span class="t">&lt;/StrictMode&gt;</span>
+  <span class="t">&lt;/BrowserRouter&gt;</span>
+)</pre>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>App.jsx — Routes and Route define the URL → component map</div>
+    <pre><span class="k">import</span> { <span class="h">Route</span>, <span class="h">Routes</span> } <span class="k">from</span> <span class="s">'react-router-dom'</span>
+<span class="k">import</span> <span class="h">Header</span>   <span class="k">from</span> <span class="s">'./header'</span>
+<span class="k">import</span> <span class="h">Products</span> <span class="k">from</span> <span class="s">'./Products'</span>
+<span class="k">import</span> <span class="h">About</span>    <span class="k">from</span> <span class="s">'./About'</span>
+<span class="k">import</span> <span class="h">Signup</span>   <span class="k">from</span> <span class="s">'./Signup'</span>
+<span class="k">import</span> <span class="h">Signin</span>   <span class="k">from</span> <span class="s">'./Signin'</span>
+
+<span class="k">function</span> <span class="fn">App</span>() {
+  <span class="k">const</span> [searchquery, setsearchquery] <span class="v">=</span> <span class="h">useState</span>(<span class="s">''</span>)
+
+  <span class="k">return</span> (
+    <span class="t">&lt;&gt;</span>
+      <span class="t">&lt;Header</span> <span class="a">setsearchquery</span><span class="v">={setsearchquery}</span> <span class="t">/&gt;</span>
+      <span class="cm">// Header always shows on every page — it's OUTSIDE Routes</span>
+
+      <span class="t">&lt;Routes&gt;</span>
+        <span class="cm">// Each Route maps a URL path to a component</span>
+        <span class="t">&lt;Route</span> <span class="a">path</span><span class="v">=</span><span class="s">'/'</span>         <span class="a">element</span><span class="v">={</span><span class="t">&lt;Products</span> <span class="a">searchquery</span><span class="v">={searchquery}</span> <span class="t">/&gt;</span><span class="v">}</span> <span class="t">/&gt;</span>
+        <span class="t">&lt;Route</span> <span class="a">path</span><span class="v">=</span><span class="s">'/about'</span>    <span class="a">element</span><span class="v">={</span><span class="t">&lt;About /&gt;</span><span class="v">}</span>                          <span class="t">/&gt;</span>
+        <span class="t">&lt;Route</span> <span class="a">path</span><span class="v">=</span><span class="s">'/products'</span> <span class="a">element</span><span class="v">={</span><span class="t">&lt;Products</span> <span class="a">searchquery</span><span class="v">={searchquery}</span> <span class="t">/&gt;</span><span class="v">}</span> <span class="t">/&gt;</span>
+        <span class="t">&lt;Route</span> <span class="a">path</span><span class="v">=</span><span class="s">'/register'</span> <span class="a">element</span><span class="v">={</span><span class="t">&lt;Signup /&gt;</span><span class="v">}</span>                          <span class="t">/&gt;</span>
+        <span class="t">&lt;Route</span> <span class="a">path</span><span class="v">=</span><span class="s">'/login'</span>    <span class="a">element</span><span class="v">={</span><span class="t">&lt;Signin /&gt;</span><span class="v">}</span>                          <span class="t">/&gt;</span>
+      <span class="t">&lt;/Routes&gt;</span>
+    <span class="t">&lt;/&gt;</span>
+  )
+}</pre>
+
+    <div class="file-bar"><span class="fb-dot jsx"></span>header.jsx — Link replaces &lt;a href&gt; for SPA navigation</div>
+    <pre><span class="k">import</span> { <span class="h">Link</span> } <span class="k">from</span> <span class="s">"react-router-dom"</span>
+
+<span class="t">&lt;nav</span> <span class="a">style</span><span class="v">={{</span>display:<span class="s">"flex"</span>, gap:<span class="s">"10px"</span><span class="v">}}</span><span class="t">&gt;</span>
+  <span class="t">&lt;Link</span> <span class="a">to</span><span class="v">=</span><span class="s">'/'</span><span class="t">&gt;</span>       <span class="t">&lt;a&gt;</span>HOME<span class="t">&lt;/a&gt;</span>     <span class="t">&lt;/Link&gt;</span>
+  <span class="t">&lt;Link</span> <span class="a">to</span><span class="v">=</span><span class="s">'/about'</span><span class="t">&gt;</span>   <span class="t">&lt;a&gt;</span>ABOUT<span class="t">&lt;/a&gt;</span>    <span class="t">&lt;/Link&gt;</span>
+  <span class="t">&lt;Link</span> <span class="a">to</span><span class="v">=</span><span class="s">'/products'</span><span class="t">&gt;</span> <span class="t">&lt;a&gt;</span>PRODUCTS<span class="t">&lt;/a&gt;</span> <span class="t">&lt;/Link&gt;</span>
+  <span class="t">&lt;Link</span> <span class="a">to</span><span class="v">=</span><span class="s">'/register'</span><span class="t">&gt;</span> <span class="t">&lt;a&gt;</span>SIGNUP<span class="t">&lt;/a&gt;</span>   <span class="t">&lt;/Link&gt;</span>
+  <span class="t">&lt;Link</span> <span class="a">to</span><span class="v">=</span><span class="s">'/login'</span><span class="t">&gt;</span>    <span class="t">&lt;a&gt;</span>SIGNIN<span class="t">&lt;/a&gt;</span>   <span class="t">&lt;/Link&gt;</span>
+<span class="t">&lt;/nav&gt;</span></pre>
+
+    <div class="note amber">
+      <strong>Why Link and not &lt;a href=""&gt;?</strong> A regular <code>&lt;a href="/about"&gt;</code> causes a full browser page reload —
+      the entire React app is thrown away and re-downloaded. <code>&lt;Link to="/about"&gt;</code> intercepts the click,
+      updates the URL bar using the History API, and tells React Router to swap the component — all without touching the server.
+      That's the entire SPA advantage: instant navigation, state preserved, no flash.
+    </div>
+
+    <div class="note" style="margin-top:12px">
+      <strong>Why is Header outside &lt;Routes&gt;?</strong> Anything outside <code>&lt;Routes&gt;</code> renders on every page.
+      The header, footer, sidebar — all persistent UI — goes outside. Only the "page content" area goes inside Routes.
+      When the route changes, React replaces whatever's inside Routes but leaves everything outside untouched.
+    </div>
+
+    <div class="note green" style="margin-top:12px">
+      <strong>The three components you must import from react-router-dom:</strong><br />
+      <code>BrowserRouter</code> — wraps the whole app in main.jsx, enables routing context<br />
+      <code>Routes</code> + <code>Route</code> — define the URL map inside App.jsx<br />
+      <code>Link</code> — replaces anchor tags for navigation without reload
+    </div>
+  </div>
+</div>
+
+</div> <!-- end main -->
+
+
+<!-- ═══════════════ NODE PART HEADER ═══════════════ -->
+<div class="part-header" style="margin-top:64px">
+  <div class="part-band node">
+    <div class="part-icon node">JS</div>
+    <div>
+      <h2>Part 2 — Node.js + Express Backend</h2>
+      <p>V8 engine · fs + http modules · npm · Express · REST API with GET and POST</p>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ──────── N1: Node.js + V8 ──────── -->
+<div class="step" id="s6">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num n">N1</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">What is Node.js + the V8 Engine</div>
+      <div class="step-file">Concept — no file</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      JavaScript was designed to run inside browsers. Every browser has a JS engine — Chrome uses
+      <strong>V8</strong>, Firefox uses SpiderMonkey, Safari uses JavaScriptCore.
+      The V8 engine is what actually <em>executes</em> your JavaScript code — it compiles it to machine code and runs it.
+    </p>
+    <p class="step-desc">
+      <strong>Node.js</strong> took Google's V8 engine and ripped it out of the browser.
+      Then it added extra capabilities — file system access, network access, the ability to create HTTP servers —
+      things browsers can't do for security reasons. The result: you can now run JavaScript on a server, on your laptop,
+      anywhere — without a browser. Same language, new environment.
+    </p>
+
+    <div class="file-bar"><span class="fb-dot idea"></span>concept — Browser JS vs Node.js JS</div>
+    <pre><span class="cm">// In the browser — JS CAN do:</span>
+document.getElementById(<span class="s">'btn'</span>).<span class="m">click</span>()   <span class="cm">// manipulate HTML</span>
+window.location.href <span class="v">=</span> <span class="s">'/about'</span>           <span class="cm">// navigate pages</span>
+<span class="m">fetch</span>(<span class="s">'https://api.com'</span>)                   <span class="cm">// make HTTP requests</span>
+
+<span class="cm">// In the browser — JS CANNOT do:</span>
+<span class="k">const</span> fs <span class="v">=</span> <span class="m">require</span>(<span class="s">'fs'</span>)   <span class="cm">// ❌ no file system access (security)</span>
+
+<span class="cm">// In Node.js — JS CAN do:</span>
+<span class="k">const</span> fs <span class="v">=</span> <span class="m">require</span>(<span class="s">'fs'</span>)
+fs.<span class="m">readFileSync</span>(<span class="s">'file.txt'</span>)               <span class="cm">// ✅ read files from disk</span>
+
+<span class="cm">// In Node.js — JS CANNOT do:</span>
+document.querySelector(<span class="s">'h1'</span>)             <span class="cm">// ❌ no DOM (no browser)</span>
+window.alert(<span class="s">'hi'</span>)                       <span class="cm">// ❌ no window object</span></pre>
+
+    <div class="note node-green">
+      <strong>The mental model:</strong> V8 is the engine (the JS execution core). The browser is one environment that uses V8.
+      Node.js is another environment that also uses V8. Same JavaScript language — different APIs available depending on where you run it.
+      <code>console.log()</code> works in both. <code>document</code> only exists in the browser. <code>fs</code> only exists in Node.
+    </div>
+
+    <div class="concept-grid" style="margin-top:18px">
+      <div class="cg-box">
+        <div class="cg-label">V8 Engine</div>
+        <p>Google's JS engine written in C++. Compiles JavaScript directly to machine code. Used by both Chrome and Node.js. Responsible for making JS fast.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label">Browser environment</div>
+        <p>V8 + DOM APIs + Web APIs (<code>fetch</code>, <code>localStorage</code>, <code>window</code>, <code>document</code>). Sandboxed — can't touch your filesystem.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label">Node.js environment</div>
+        <p>V8 + Node APIs (<code>fs</code>, <code>http</code>, <code>path</code>, <code>process</code>). No DOM. Full system access. Used to build servers, CLIs, scripts.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── N2: fs + http module ──────── -->
+<div class="step" id="s7">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num n">N2</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">Built-in Modules — fs and http</div>
+      <div class="step-file">Node.js core modules · no install needed</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      Node.js comes with a set of <strong>built-in modules</strong> — they're included with Node itself,
+      no <code>npm install</code> required. You require them by name. You covered two of the most important ones:
+      <strong><code>fs</code></strong> (file system) and <strong><code>http</code></strong> (create HTTP servers).
+    </p>
+
+    <div class="file-bar"><span class="fb-dot idea"></span>concept — fs module (file system)</div>
+    <pre><span class="k">const</span> fs <span class="v">=</span> <span class="m">require</span>(<span class="s">'fs'</span>)   <span class="cm">// built-in, no npm install</span>
+
+<span class="cm">// Read a file synchronously (blocks until done)</span>
+<span class="k">const</span> data <span class="v">=</span> fs.<span class="m">readFileSync</span>(<span class="s">'hello.txt'</span>, <span class="s">'utf8'</span>)
+console.<span class="m">log</span>(data)   <span class="cm">// prints file contents</span>
+
+<span class="cm">// Write a file</span>
+fs.<span class="m">writeFileSync</span>(<span class="s">'output.txt'</span>, <span class="s">'Hello from Node!'</span>)
+
+<span class="cm">// Append to a file</span>
+fs.<span class="m">appendFileSync</span>(<span class="s">'log.txt'</span>, <span class="s">'New log entry\n'</span>)</pre>
+
+    <div class="file-bar"><span class="fb-dot idea"></span>concept — http module (create a raw HTTP server)</div>
+    <pre><span class="k">const</span> http <span class="v">=</span> <span class="m">require</span>(<span class="s">'http'</span>)   <span class="cm">// built-in</span>
+
+<span class="cm">// createServer takes a callback that runs for EVERY request</span>
+<span class="k">const</span> server <span class="v">=</span> http.<span class="m">createServer</span>((req, res) <span class="v">=&gt;</span> {
+  <span class="cm">// req = incoming request (URL, method, headers, body)</span>
+  <span class="cm">// res = outgoing response (what you send back)</span>
+
+  res.<span class="m">writeHead</span>(<span class="n">200</span>, { <span class="s">'Content-Type'</span>: <span class="s">'text/plain'</span> })
+  res.<span class="m">end</span>(<span class="s">'Hello from Node!'</span>)
+})
+
+server.<span class="m">listen</span>(<span class="n">3000</span>, () <span class="v">=&gt;</span> {
+  console.<span class="m">log</span>(<span class="s">'Server running on port 3000'</span>)
+})
+<span class="cm">// Open browser → http://localhost:3000 → sees "Hello from Node!"</span></pre>
+
+    <div class="note amber">
+      <strong>Why did you learn the raw http module if you then used Express?</strong>
+      Because Express is built on top of the http module. Understanding what Express does underneath —
+      creating a server, listening on a port, receiving requests and sending responses — makes you understand
+      why Express exists and what problem it solves. Express is just a layer of convenience on top of what you just coded.
+    </div>
+
+    <div class="note" style="margin-top:12px">
+      <strong>require() vs import:</strong> Node.js traditionally uses <code>require()</code> (CommonJS module system).
+      React/Vite uses <code>import</code> (ES Modules). Both are ways to load code — different systems.
+      In your <code>package.json</code> for the backend, you have <code>"type": "commonjs"</code> — that's why
+      <code>require()</code> works in <code>app.js</code>. Your React frontend uses <code>import</code> because Vite uses ES Modules.
+    </div>
+  </div>
+</div>
+
+<!-- ──────── N3: npm / package.json ──────── -->
+<div class="step" id="s8">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num n">N3</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">npm, package.json, package-lock.json</div>
+      <div class="step-file">package.json · package-lock.json</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      <strong>npm</strong> (Node Package Manager) is the registry and tool for installing third-party packages.
+      When you run <code>npm init</code>, it creates <code>package.json</code> — the configuration file that describes your project:
+      its name, version, start script, and most importantly the <strong>list of packages it depends on</strong>.
+      Every package you install with <code>npm install</code> gets recorded here.
+    </p>
+
+    <div class="file-bar"><span class="fb-dot js"></span>package.json — your actual backend config</div>
+    <pre>{
+  <span class="s">"name"</span>:        <span class="s">"ecommercebackend"</span>,
+  <span class="s">"version"</span>:     <span class="s">"1.0.0"</span>,
+  <span class="s">"main"</span>:        <span class="s">"app.js"</span>,          <span class="cm">// entry point — node runs this file</span>
+
+  <span class="s">"scripts"</span>: {
+    <span class="s">"dev"</span>: <span class="s">"node app.js"</span>            <span class="cm">// npm run dev → runs node app.js</span>
+  },
+
+  <span class="s">"type"</span>: <span class="s">"commonjs"</span>,               <span class="cm">// use require() not import</span>
+
+  <span class="s">"dependencies"</span>: {
+    <span class="s">"cors"</span>:            <span class="s">"^2.8.6"</span>,   <span class="cm">// allow cross-origin requests</span>
+    <span class="s">"express"</span>:         <span class="s">"^5.2.1"</span>,   <span class="cm">// web server framework</span>
+    <span class="s">"react-router-dom"</span>: <span class="s">"^7.16.0"</span>  <span class="cm">// (this is a mistake — belongs in frontend)</span>
+  }
+}</pre>
+
+    <div class="file-bar"><span class="fb-dot idea"></span>concept — package.json vs package-lock.json</div>
+    <pre><span class="cm">// package.json — what YOU write and maintain</span>
+<span class="cm">// "express": "^5.2.1"  means "version 5.2.1 or any compatible higher version"</span>
+<span class="cm">// The ^ means flexible — npm can install 5.2.5, 5.3.0, etc.</span>
+
+<span class="cm">// package-lock.json — what npm GENERATES automatically</span>
+<span class="cm">// Records the EXACT version of every package + every sub-dependency installed</span>
+<span class="cm">// "express": "5.2.1" — no ^, no flexibility, locked to exact version</span>
+<span class="cm">// "has-flag": "4.0.0" — sub-dependency of a sub-dependency, also locked</span>
+
+<span class="cm">// WHY the lock file matters:</span>
+<span class="cm">// You install today → express 5.2.1 installed</span>
+<span class="cm">// Your teammate installs tomorrow → without lock file, might get express 5.3.0</span>
+<span class="cm">// With lock file → both of you get exactly 5.2.1, guaranteed identical setup</span></pre>
+
+    <div class="note node-green">
+      <strong>Key npm commands:</strong><br />
+      <code>npm init -y</code> — creates package.json with defaults (skip the questions)<br />
+      <code>npm install express</code> — installs express, adds it to dependencies, creates/updates lock file<br />
+      <code>npm install</code> — installs everything listed in package.json (what teammates run after cloning)<br />
+      <code>npm run dev</code> — runs the "dev" script from package.json → <code>node app.js</code>
+    </div>
+
+    <div class="note" style="margin-top:12px">
+      <strong>node_modules is NOT committed to git.</strong> It contains thousands of files and is huge.
+      Your <code>package.json</code> and <code>package-lock.json</code> are committed instead.
+      Anyone who clones your repo runs <code>npm install</code> and npm recreates node_modules exactly.
+      That's the contract these two files create.
+    </div>
+  </div>
+</div>
+
+<!-- ──────── N4: Express ──────── -->
+<div class="step" id="s9">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num n">N4</div>
+      <div class="step-vline"></div>
+    </div>
+    <div>
+      <div class="step-title">Express.js — Building the Server</div>
+      <div class="step-file">app.js — top section</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      <strong>Express.js</strong> is a minimal web framework for Node.js. It wraps the raw <code>http</code> module
+      you saw earlier and adds a much cleaner API for defining routes, handling requests, sending responses, and
+      plugging in middleware. Every real Node.js backend you encounter will use Express or something built on top of it.
+    </p>
+
+    <div class="file-bar"><span class="fb-dot js"></span>app.js — express server setup (top of your actual file)</div>
+    <pre><span class="k">const</span> express <span class="v">=</span> <span class="m">require</span>(<span class="s">'express'</span>)   <span class="cm">// import express package</span>
+<span class="k">const</span> cors    <span class="v">=</span> <span class="m">require</span>(<span class="s">'cors'</span>)      <span class="cm">// import cors package</span>
+<span class="k">const</span> app     <span class="v">=</span> <span class="m">express</span>()           <span class="cm">// create the app instance</span>
+<span class="k">const</span> port    <span class="v">=</span> <span class="n">3000</span>
+
+app.<span class="m">use</span>(<span class="m">cors</span>())             <span class="cm">// middleware: allow requests from other origins</span>
+app.<span class="m">use</span>(express.<span class="m">json</span>())    <span class="cm">// middleware: parse JSON bodies on incoming requests</span>
+
+<span class="cm">// ...</span>
+
+app.<span class="m">listen</span>(port, () <span class="v">=&gt;</span> {
+  console.<span class="m">log</span>(<span class="s">`the server is running on <span class="v">${port}</span>`</span>)
+  <span class="cm">// server is now listening for requests at http://localhost:3000</span>
+})</pre>
+
+    <div class="note">
+      <strong>What is CORS and why do you need it?</strong> Browsers have a security rule: a web page at
+      <code>http://localhost:5173</code> (your React app) is not allowed to make requests to
+      <code>http://localhost:3000</code> (your Node server) unless the server explicitly says it's OK.
+      This is called the Same-Origin Policy. The <code>cors</code> package adds a response header
+      (<code>Access-Control-Allow-Origin: *</code>) that tells the browser "yes, this server allows requests from other origins."
+      Without it, your React fetch calls would fail with a CORS error in the console.
+    </div>
+
+    <div class="note amber" style="margin-top:12px">
+      <strong>What is middleware?</strong> <code>app.use()</code> registers middleware — functions that run on every
+      incoming request before it reaches your route handlers. <code>cors()</code> adds the CORS header to every response.
+      <code>express.json()</code> reads the request body and parses it from a raw string into a JavaScript object,
+      so you can do <code>req.body.title</code> instead of parsing JSON manually. Order matters — middleware runs top to bottom.
+    </div>
+
+    <div class="cols2" style="margin-top:18px">
+      <div class="col-card">
+        <div class="col-label">Raw http module (verbose)</div>
+        <pre><span class="k">const</span> http <span class="v">=</span> <span class="m">require</span>(<span class="s">'http'</span>)
+<span class="k">const</span> server <span class="v">=</span> http.<span class="m">createServer</span>((req, res) <span class="v">=&gt;</span> {
+  <span class="k">if</span> (req.url <span class="v">===</span> <span class="s">'/products'</span>
+      <span class="v">&&</span> req.method <span class="v">===</span> <span class="s">'GET'</span>) {
+    res.<span class="m">writeHead</span>(<span class="n">200</span>, {<span class="s">'Content-Type'</span>:<span class="s">'application/json'</span>})
+    res.<span class="m">end</span>(JSON.<span class="m">stringify</span>(products))
+  }
+  <span class="cm">// imagine handling 20 routes like this...</span>
+})
+server.<span class="m">listen</span>(<span class="n">3000</span>)</pre>
+      </div>
+      <div class="col-card">
+        <div class="col-label">Express (clean)</div>
+        <pre><span class="k">const</span> express <span class="v">=</span> <span class="m">require</span>(<span class="s">'express'</span>)
+<span class="k">const</span> app <span class="v">=</span> <span class="m">express</span>()
+
+app.<span class="m">get</span>(<span class="s">'/products'</span>, (req, res) <span class="v">=&gt;</span> {
+  res.<span class="m">json</span>(products)
+  <span class="cm">// that's it. Express handles Content-Type,</span>
+  <span class="cm">// JSON.stringify, status 200 automatically</span>
+})
+
+app.<span class="m">listen</span>(<span class="n">3000</span>)</pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────── N5: app.get + app.post ──────── -->
+<div class="step" id="s10">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num n">N5</div>
+    </div>
+    <div>
+      <div class="step-title">app.get + app.post — Your REST API</div>
+      <div class="step-file">app.js — GET /products + POST /products</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <p class="step-desc">
+      HTTP has different <strong>request methods</strong> that carry meaning about what the client wants to do.
+      <strong>GET</strong> means "give me data" — used to retrieve resources, no body needed.
+      <strong>POST</strong> means "I'm sending you new data" — used to create resources, body contains the new data.
+      Express gives you <code>app.get()</code> and <code>app.post()</code> methods that match exactly those HTTP methods.
+    </p>
+
+    <div class="file-bar"><span class="fb-dot js"></span>app.js — GET /products — send the products array as JSON</div>
+    <pre><span class="cm">// The products array — 20 items, same shape as FakeStore API</span>
+<span class="k">let</span> products <span class="v">=</span> [
+  { id: <span class="n">1</span>, title: <span class="s">"Fjallraven Backpack"</span>, price: <span class="n">109.95</span>, image: <span class="s">"..."</span>, ... },
+  { id: <span class="n">2</span>, title: <span class="s">"Mens Casual T-Shirt"</span>, price: <span class="n">22.3</span>,  image: <span class="s">"..."</span>, ... },
+  <span class="cm">// ... 18 more</span>
+]
+
+<span class="cm">// GET /products — when the browser or React fetch() calls this URL</span>
+app.<span class="m">get</span>(<span class="s">'/products'</span>, (req, res) <span class="v">=&gt;</span> {
+  res.<span class="m">json</span>(products)
+  <span class="cm">// res.json() → serializes the array to JSON string</span>
+  <span class="cm">// → sets Content-Type: application/json automatically</span>
+  <span class="cm">// → sends HTTP status 200 automatically</span>
+})
+
+<span class="cm">// This is exactly what Products.jsx fetches:</span>
+<span class="cm">// fetch('http://localhost:3000/products') → hits this route → gets the array</span></pre>
+
+    <div class="file-bar"><span class="fb-dot js"></span>app.js — POST /products — add a new product to the array</div>
+    <pre><span class="cm">// POST /products — when someone sends a new product in the request body</span>
+app.<span class="m">post</span>(<span class="s">'/products'</span>, (req, res) <span class="v">=&gt;</span>  {
+  <span class="cm">// req.body is the parsed JSON from the request body</span>
+  <span class="cm">// (only works because of app.use(express.json()) at the top)</span>
+  <span class="k">const</span> { id, title, image, price } <span class="v">=</span> req.body
+
+  <span class="k">let</span> newproduct <span class="v">=</span> { id, title, image, price }
+  products.<span class="m">push</span>(newproduct)   <span class="cm">// adds to the in-memory array</span>
+
+  res.<span class="m">json</span>({ <span class="s">"msg"</span>: <span class="s">"products are added successfully"</span> })
+  <span class="cm">// sends confirmation back to whoever made the POST request</span>
+})</pre>
+
+    <div class="file-bar"><span class="fb-dot idea"></span>concept — how you would test the POST route (from frontend or Postman)</div>
+    <pre><span class="cm">// From the browser / React — fetch with method POST</span>
+<span class="m">fetch</span>(<span class="s">'http://localhost:3000/products'</span>, {
+  method:  <span class="s">'POST'</span>,
+  headers: { <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> },
+  body:    JSON.<span class="m">stringify</span>({
+    id:    <span class="n">21</span>,
+    title: <span class="s">"New Product"</span>,
+    price: <span class="n">49.99</span>,
+    image: <span class="s">"https://..."</span>
+  })
+})
+  .<span class="m">then</span>(r <span class="v">=&gt;</span> r.<span class="m">json</span>())
+  .<span class="m">then</span>(data <span class="v">=&gt;</span> console.<span class="m">log</span>(data))
+  <span class="cm">// → { msg: "products are added successfully" }</span>
+
+<span class="cm">// Then fetch GET /products again → new product is in the list</span></pre>
+
+    <div class="note red">
+      <strong>Important limitation:</strong> The products array is stored in memory (<code>let products = [...]</code>).
+      When you restart the Node server with <code>npm run dev</code>, the array resets to the original 20 items
+      — any products you POSTed are gone. To persist data between restarts you'd need a real database
+      (MongoDB, PostgreSQL, SQLite) or at minimum write to a JSON file using <code>fs.writeFileSync()</code>.
+      This is the next step after this project.
+    </div>
+
+    <div class="note node-green" style="margin-top:12px">
+      <strong>The full picture — how React connects to your Node backend:</strong>
+      <div class="flow" style="margin-top:12px; flex-direction:column; align-items:flex-start; gap:10px">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+          <div class="flow-box">Browser opens localhost:5173</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-box nd">Vite serves React app</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-box">Products mounts</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+          <div class="flow-box">useEffect fires</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-box hi">fetch('localhost:3000/products')</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-box nd">Express GET /products handler</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap">
+          <div class="flow-box nd">res.json(products)</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-box gr">JSON arrives in React</div>
+          <span class="flow-arr">→</span>
+          <div class="flow-box">setproducts(data) → re-render → cards appear</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ SUMMARY ═══════════════ -->
+<hr />
+
+<div class="step" style="margin-top:52px">
+  <div class="step-hd">
+    <div class="step-badge">
+      <div class="step-num" style="color:var(--accent2); border-color:rgba(62,207,142,0.3); background:rgba(62,207,142,0.07)">∑</div>
+    </div>
+    <div>
+      <div class="step-title">Full Session Summary</div>
+      <div class="step-file">Everything covered, in one place</div>
+    </div>
+  </div>
+  <div class="step-body">
+    <div class="concept-grid">
+      <div class="cg-box">
+        <div class="cg-label" style="color:#61dafb">classList.toggle</div>
+        <p>DOM API to add/remove/toggle CSS class names. Used for dark mode without React state — the DOM class IS the truth.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--accent)">Array.filter()</div>
+        <p>Returns new array with only items where callback returns true. Used with <code>.includes()</code> for live search.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--accent4)">State lifting</div>
+        <p>Shared state moves to closest common ancestor. App holds searchquery, gives setter to Header, value to Products.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--accent3)">React Router DOM</div>
+        <p>BrowserRouter in main.jsx. Routes+Route in App.jsx. Link instead of &lt;a&gt;. No page reload — URL changes in History API only.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--node)">Node.js + V8</div>
+        <p>JS outside the browser. V8 engine runs JS. Node adds fs, http, process. No DOM. Used to build servers and APIs.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--node)">npm + package.json</div>
+        <p>npm installs packages. package.json tracks deps. package-lock.json locks exact versions for reproducible installs.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--node)">Express middleware</div>
+        <p>app.use() registers middleware — runs on every request. cors() enables cross-origin. express.json() parses request body.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--node)">app.get</div>
+        <p>Handles GET requests — used to retrieve data. <code>res.json()</code> sends JS object as JSON response with correct headers.</p>
+      </div>
+      <div class="cg-box">
+        <div class="cg-label" style="color:var(--node)">app.post</div>
+        <p>Handles POST requests — used to create data. Read new data from <code>req.body</code>, push to array, send confirmation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div> <!-- end main -->
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<div class="footer">
+  <span>react-ecom — session 2 notes</span>
+  <span>classList · filter · router · node · express · REST API</span>
+</div>
+
+</body>
+</html>
